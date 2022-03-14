@@ -60,18 +60,16 @@ class Server {
                 const nombreTemporal = uuidv4() +'.' + extension;
                 const path = require('path');
                 console.log('ARCHIVO',archivo)
-                const uploadPath = path.join(__dirname,'../public/imagenes',nombreTemporal);
+                let uploadPath = path.join(__dirname,'../public/imagenes',nombreTemporal);
                 archivo.mv(uploadPath, function(err){
                   if ( err ) {
                     return res.status(500).json(err);
                   }
-                  res.status(200).json({
-                    msg:'Archivo subido con éxito',
-                    uploadPath
-                   
-                  })
                 })
-      
+                res.status(200).json({
+                    msg: "Se ha enviado 'imagen' correctamente",
+                    nombreTemporal
+                });
               }
             })
 
@@ -128,7 +126,6 @@ class Server {
                       token: tokenGenerado,
                       miusuario,
                     });
-                    res.redirect('http://localhost:90/index.html');
                   } catch (error) {
                     res.json({
                       msg: "ERROR DE VERIFICACIÓN DE GMAIL",
@@ -167,7 +164,6 @@ class Server {
                             //genero el JWT
                             const token = await generarJWT(miUsuario.id);
                             const id = miUsuario.id;
-                            res.redirect(200, {'Location' : 'http://localhost:90/index.html'});
                             res.json({
                                 msg: "Login OK",
                                 token,
@@ -207,7 +203,7 @@ class Server {
                 //[{"categoria":"chucherias","id":30,"imagen":"chuches.jpg","nombre":"chupa chus de naranja","precio":0.0},{"categoria":"chucherias","id":31,"imagen":"chuches.jpg","nombre":"chicle de melón","precio":0.0},{"categoria":"postres","id":33,"imagen":"melon.jpg","nombre":"Melon de chino","precio":2.0},{"categoria":"postres","id":34,"imagen":"melon.jpg","nombre":"Melon de sapo","precio":2.0},{"categoria":"bebidas","id":35,"imagen":"burger/fanta.png","nombre":"Coca cola de melón","precio":3.0},{"categoria":"refrescos","id":38,"imagen":"sandia.jpg","nombre":"refresco de kiwi","precio":2.0},{"categoria":"bocadillos","id":39,"imagen":"cod-1659603340642614231-bocadillo.jfif","nombre":"Bocadillo de calamares","precio":5.0},{"categoria":"bebidas","id":40,"imagen":"cod-737444841162795513-bocata2.jpg","nombre":"cerveza","precio":2.0}]
             )
         })
-        this.app.post('/destinos', function (req, res) {
+        this.app.post('/destinos',validarJWT, function (req, res) {
             const body = req.body;
             let miDestino = new Destino(body);
             miDestino.save();
@@ -218,7 +214,7 @@ class Server {
             })
         })
         //put-destinos
-        this.app.put('/destinos/:id', async function (req, res) {
+        this.app.put('/destinos/:id',validarJWT, async function (req, res) {
             const body = req.body;
             const id = req.params.id;
             await Destino.findByIdAndUpdate(id, body);
@@ -229,7 +225,7 @@ class Server {
             })
         })
         //delete DESTINOS
-        this.app.delete('/destinos/:id', async function (req, res) {
+        this.app.delete('/destinos/:id',validarJWT, async function (req, res) {
             const id = req.params.id;
             await Destino.findByIdAndDelete(id);
             res.status(200).json({
@@ -238,9 +234,6 @@ class Server {
             })
         })
         /******* RUTAS DEL USUARIO */
-        this.app.get('/', function (req, res) {
-
-        })
         this.app.get('/api', async function (req, res) {
             let usuarios = await Usuario.find();
             res.status(403).json({
@@ -324,8 +317,8 @@ class Server {
         this.app.get('/saludo', function (req, res) {
             res.send('<h1>Hola 2DAW</h1>')
         })
-        this.app.get('*', function (req, res) {
-            res.sendFile(__dirname + '/404.html')
+        this.app.get('/', function (req, res) {
+            res.redirect('public/login.html')
         })
     }
 
